@@ -1,0 +1,103 @@
+
+module tb_top_ahb();
+
+
+reg CLK_MASTER;
+reg RESET_MASTER;
+
+reg write_top;
+reg [31:0] data_top;
+reg [31:0] addr_top;
+reg [3:0] beat_length;
+reg enb;
+reg wrap_enb;
+
+top_ahb DUT(
+
+    .CLK_MASTER(CLK_MASTER),
+    .RESET_MASTER(RESET_MASTER),
+
+    .write_top(write_top),
+    .data_top(data_top),
+    .addr_top(addr_top),
+    .beat_length(beat_length),
+    .enb(enb),
+    .wrap_enb(wrap_enb)
+
+);
+
+//---------------- Clock -----------------
+
+initial
+begin
+    CLK_MASTER = 0;
+    forever #5 CLK_MASTER = ~CLK_MASTER;
+end
+
+//---------------- Stimulus ----------------
+
+initial
+begin
+
+    RESET_MASTER = 1;
+
+    write_top = 0;
+    data_top = 0;
+    addr_top = 0;
+    beat_length = 0;
+    enb = 0;
+    wrap_enb = 0;
+
+    #20;
+
+    RESET_MASTER = 0;
+
+    //----------------------------------------------------
+    // SINGLE WRITE
+    //----------------------------------------------------
+
+    @(posedge CLK_MASTER);
+
+    write_top   = 1;
+    data_top    = 32'h11111111;
+    addr_top    = 32'h00000000;
+    beat_length = 1;
+    enb         = 1;
+    wrap_enb    = 0;
+
+    @(posedge CLK_MASTER);
+
+    write_top = 0;
+
+    #50;
+
+    //----------------------------------------------------
+    // INCR4 WRITE
+    //----------------------------------------------------
+
+    write_top   = 1;
+    beat_length = 4;
+    enb         = 1;
+
+    addr_top = 32'h00000010;
+    data_top = 32'hAAAAAAAA;
+    @(posedge CLK_MASTER);
+
+    data_top = 32'hBBBBBBBB;
+    @(posedge CLK_MASTER);
+
+    data_top = 32'hCCCCCCCC;
+    @(posedge CLK_MASTER);
+
+    data_top = 32'hDDDDDDDD;
+    @(posedge CLK_MASTER);
+
+    write_top = 0;
+
+    #100;
+
+    $finish;
+
+end
+
+endmodule
