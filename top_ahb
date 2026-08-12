@@ -1,0 +1,86 @@
+module top_ahb(
+
+
+
+input CLK_MASTER,
+input RESET_MASTER,
+
+input write_top,
+input [31:0] data_top,
+input [31:0] addr_top,
+input [3:0] beat_length,
+input enb,
+input wrap_enb,
+
+output HWRITE_out,
+output HREADY_out,
+output fifo_empty_out,
+output fifo_full_out
+
+
+
+);
+
+//----------------------AHB Signals-------------------------
+
+wire [31:0] HADDR;wire [31:0] HWDATA;wire [31:0] HRDATA;
+
+wire [2:0] HSIZE;wire [2:0] HBURST;wire [1:0] HTRANS;
+
+wire HWRITE;wire HREADY;
+
+wire fifo_empty;wire fifo_full;
+
+//----------------------Master------------------------------
+
+master_ahb MASTER(
+
+.CLK_MASTER(CLK_MASTER),
+.RESET_MASTER(RESET_MASTER),
+
+.HREADY(HREADY),
+.HRDATA(HRDATA),
+
+.data_top(data_top),
+.write_top(write_top),
+.beat_length(beat_length),
+.enb(enb),
+.addr_top(addr_top),
+.wrap_enb(wrap_enb),
+
+.HADDR(HADDR),
+.HWRITE(HWRITE),
+.HSIZE(HSIZE),
+.HBURST(HBURST),
+.HTRANS(HTRANS),
+.HWDATA(HWDATA),
+
+.fifo_empty(fifo_empty),
+.fifo_full(fifo_full)
+
+);
+
+//----------------------Slave-------------------------------
+
+ahb_slave SLAVE(
+
+.HCLK(CLK_MASTER),
+.HRESETn(~RESET_MASTER),
+
+.HADDR(HADDR),
+.HWDATA(HWDATA),
+
+.HTRANS(HTRANS),
+.HBURST(HBURST),
+.HSIZE(HSIZE),
+
+.HWRITE(HWRITE),
+
+.HRDATA(HRDATA),
+.HREADY(HREADY)
+
+);
+
+assign HWRITE_out     = HWRITE;assign HREADY_out     = HREADY;assign fifo_empty_out = fifo_empty;assign fifo_full_out  = fifo_full;
+
+endmodule
